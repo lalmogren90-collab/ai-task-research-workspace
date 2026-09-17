@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.*
+
+# Keep example environment file
+!.env.example
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
