@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -11,7 +12,7 @@ async def main():
             "run",
             "backend/app/mcp/server.py",
         ],
-        cwd="/Users/cysec/Desktop/AI Training",
+        cwd=str(Path(__file__).resolve().parents[3]),
     )
 
     async with stdio_client(server_params) as (read, write):

@@ -179,7 +179,7 @@ def run_subagent(
 
     if not agent:
         return {
-            "error": f"Unknown subagent: {agent_name}"
+            "error": "Unknown subagent."
         }
 
     try:
@@ -188,7 +188,7 @@ def run_subagent(
             user_message,
         )
 
-    except Exception as error:
+    except Exception:
         return {
-            "error": f"Subagent execution failed: {str(error)}"
+            "error": "Subagent execution failed."
         }

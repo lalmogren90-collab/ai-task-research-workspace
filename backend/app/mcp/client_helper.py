@@ -1,10 +1,11 @@
 import asyncio
+from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 
-PROJECT_ROOT = "/Users/cysec/Desktop/AI Training"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 async def _call_mcp_tool(
@@ -17,7 +18,7 @@ async def _call_mcp_tool(
             "run",
             "backend/app/mcp/server.py",
         ],
-        cwd=PROJECT_ROOT,
+        cwd=str(PROJECT_ROOT),
     )
 
     async with stdio_client(server_params) as (read, write):

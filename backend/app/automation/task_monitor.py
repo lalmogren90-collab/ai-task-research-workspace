@@ -7,12 +7,26 @@ from backend.app.mcp.client_helper import call_mcp_tool
 def check_unfinished_tasks():
     print("Checking for unfinished tasks...")
 
-    result = call_mcp_tool(
-        "get_tasks",
-        {},
-    )
+    try:
+        result = call_mcp_tool(
+            "get_tasks",
+            {},
+        )
+    except Exception:
+        result = None
 
-    tasks = result.get("result", [])
+    if (
+        not isinstance(result, dict)
+        or "error" in result
+        or not isinstance(result.get("result"), list)
+    ):
+        print("Task retrieval failed.")
+        return {
+            "triggered": False,
+            "error": "Task retrieval failed.",
+        }
+
+    tasks = result["result"]
 
     unfinished_tasks = [
         task
