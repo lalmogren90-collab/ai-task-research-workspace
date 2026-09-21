@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./App.css";
 
 
@@ -305,7 +307,15 @@ function App() {
                     : "Agent"}
                 </span>
 
-                <p>{item.content}</p>
+                {item.role === "assistant" ? (
+                  <div className="message-content">
+                    <Markdown remarkPlugins={[remarkGfm]} skipHtml>
+                      {item.content}
+                    </Markdown>
+                  </div>
+                ) : (
+                  <p>{item.content}</p>
+                )}
               </div>
             ))}
 
