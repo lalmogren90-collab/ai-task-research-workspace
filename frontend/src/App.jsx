@@ -14,6 +14,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [taskLoading, setTaskLoading] = useState(true);
   const [error, setError] = useState("");
+  const [visionImage, setVisionImage] = useState(null);
   const [agentInfo, setAgentInfo] = useState({
     delegatedTo: null,
     selectedSkill: null,
@@ -107,6 +108,69 @@ function App() {
       });
 
       await loadTasks();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  async function analyzeImage() {
+    const trimmedMessage = message.trim();
+
+    if (!visionImage || !trimmedMessage || loading) {
+      return;
+    }
+
+    setMessages((current) => [
+      ...current,
+      {
+        role: "user",
+        content:
+          `🖼️ ${visionImage.name}\n\n${trimmedMessage}`,
+      },
+    ]);
+
+    setError("");
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("prompt", trimmedMessage);
+    formData.append("image", visionImage);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/ai/vision`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "The multimodal analysis failed."
+        );
+      }
+
+      const data = await response.json();
+
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          content: data.response,
+        },
+      ]);
+
+      setAgentInfo({
+        delegatedTo: "Vision Agent",
+        selectedSkill: "Multimodal VLM",
+      });
+
+      setMessage("");
+      setVisionImage(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -254,9 +318,9 @@ function App() {
                 </h3>
 
                 <p>
-                  Ask about your tasks, request a
-                  plan, audit your task list, or
-                  research a technical topic.
+                  Ask about your tasks, research a
+                  technical topic, or upload an image
+                  for multimodal analysis.
                 </p>
 
                 <div className="suggestions">
@@ -309,7 +373,10 @@ function App() {
 
                 {item.role === "assistant" ? (
                   <div className="message-content">
-                    <Markdown remarkPlugins={[remarkGfm]} skipHtml>
+                    <Markdown
+                      remarkPlugins={[remarkGfm]}
+                      skipHtml
+                    >
                       {item.content}
                     </Markdown>
                   </div>
@@ -346,16 +413,66 @@ function App() {
               onChange={(event) =>
                 setMessage(event.target.value)
               }
-              placeholder="Ask your agent..."
+              placeholder={
+                visionImage
+                  ? "Ask a question about the selected image..."
+                  : "Ask your agent..."
+              }
             />
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || Boolean(visionImage)}
             >
               {loading ? "Running..." : "Send"}
             </button>
           </form>
+
+          <div className="vision-controls">
+            <label className="image-upload">
+              <span>
+                {visionImage
+                  ? `Image: ${visionImage.name}`
+                  : "Choose Image"}
+              </span>
+
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) =>
+                  setVisionImage(
+                    event.target.files?.[0] || null
+                  )
+                }
+              />
+            </label>
+
+            {visionImage && (
+              <>
+                <button
+                  className="vision-button"
+                  type="button"
+                  disabled={
+                    loading || !message.trim()
+                  }
+                  onClick={analyzeImage}
+                >
+                  Analyze Image
+                </button>
+
+                <button
+                  className="clear-image-button"
+                  type="button"
+                  disabled={loading}
+                  onClick={() =>
+                    setVisionImage(null)
+                  }
+                >
+                  Remove Image
+                </button>
+              </>
+            )}
+          </div>
         </section>
       </main>
 
@@ -378,6 +495,11 @@ function App() {
         <div>
           <span>Research</span>
           <strong>Live Web</strong>
+        </div>
+
+        <div>
+          <span>Vision</span>
+          <strong>Multimodal VLM</strong>
         </div>
 
         <div>

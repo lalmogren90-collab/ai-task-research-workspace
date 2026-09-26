@@ -30,3 +30,8 @@ frontend/dist/
 .pytest_cache/
 .coverage
 htmlcov/
+# Local RAG vector database
+backend/app/rag/chroma_db/
+
+# Generated analytics outputs
+backend/generated/*.png

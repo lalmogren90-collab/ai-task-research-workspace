@@ -7,10 +7,10 @@ from backend.app.memory.store import get_history, add_message
 from backend.app.memory.state import AgentState
 from backend.app.skills.loader import load_skill
 from backend.app.skills.selector import select_skill
+from backend.app.tools.task_analytics import analyze_tasks
 
 
 MODEL = "openai/gpt-oss-20b"
-
 MAX_STEPS = 5
 
 
@@ -20,7 +20,7 @@ SYSTEM_PROMPT = (
     "unless the user asks for another language. "
     "You can communicate in multiple languages. "
     "Be helpful, accurate, concise, and natural. "
-    "You can use tools to manage the user's tasks. "
+    "You can use tools to manage and analyze the user's tasks. "
     "Use get_tasks whenever the user asks about their tasks, "
     "including requests such as listing tasks, showing tasks, "
     "asking what tasks they have, asking what they are working on, "
@@ -30,6 +30,10 @@ SYSTEM_PROMPT = (
     "Use update_task whenever the user asks to change a task, "
     "including changing its title or status. "
     "Use delete_task whenever the user asks to delete or remove a task. "
+    "Use task_analytics whenever the user asks to analyze task progress, "
+    "calculate task statistics or completion rate, or generate a task chart. "
+    "The task_analytics tool executes Python analytics on task data retrieved "
+    "through MCP and generates a Matplotlib chart. "
     "Use the conversation history to understand references to previous messages."
 )
 
@@ -111,6 +115,20 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "task_analytics",
+            "description": (
+                "Analyze the user's current task progress using Python and "
+                "generate a Matplotlib task-status chart."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
+        },
+    },
 ]
 
 
@@ -173,7 +191,6 @@ def run_agent(conversation_id: str, user_message: str):
         for step in range(MAX_STEPS):
 
             state.step_count = step + 1
-
             harness.start_step(state.step_count)
 
             response = client.chat.completions.create(
@@ -205,12 +222,11 @@ def run_agent(conversation_id: str, user_message: str):
             for tool_call in assistant_message.tool_calls:
 
                 tool_name = tool_call.function.name
-
                 arguments = json.loads(
                     tool_call.function.arguments or "{}"
                 )
 
-                if tool_name == "get_tasks":
+                if tool_name in {"get_tasks", "task_analytics"}:
                     arguments = {}
 
                 state.tool_calls.append(
@@ -225,10 +241,13 @@ def run_agent(conversation_id: str, user_message: str):
                     arguments,
                 )
 
-                result = call_mcp_tool(
-                    tool_name,
-                    arguments,
-                )
+                if tool_name == "task_analytics":
+                    result = analyze_tasks()
+                else:
+                    result = call_mcp_tool(
+                        tool_name,
+                        arguments,
+                    )
 
                 state.tool_results.append(
                     {

@@ -1,0 +1,27 @@
+AI Task & Research Workspace is a full-stack agentic application.
+
+The backend is implemented with FastAPI. PostgreSQL is used to store application task data. PostgreSQL runs inside Docker.
+
+The frontend is implemented with React and Vite. It communicates with the FastAPI backend through HTTP API endpoints.
+
+The Main Agent acts as an orchestrator. Requests involving the user's task data are delegated to the Task Agent. Requests requiring external factual or current information are delegated to the Research Agent.
+
+The Task Agent accesses task data through the Model Context Protocol (MCP). MCP exposes task operations such as retrieving, creating, updating, and deleting tasks. The Task Agent does not directly access PostgreSQL for these operations.
+
+The Research Agent uses a web search tool backed by Tavily to retrieve current external information.
+
+The application supports dynamic Skills. The task_planning skill is selected for planning, prioritization, and next-step requests. The task_cleanup skill is selected for auditing tasks, detecting duplicate tasks, malformed tasks, and cleanup requests.
+
+The application includes conversation memory for maintaining context across agent interactions.
+
+The agent execution loop supports tool calling. The language model can request a tool, the application executes the tool, returns the tool result to the model, and the model produces a final response.
+
+Harness Engineering is implemented through logging of agent execution steps, tool calls, tool results, and errors.
+
+Automation is implemented using APScheduler. Automated jobs can monitor unfinished tasks and generate task summaries.
+
+The application uses Groq for language model inference.
+
+The application includes a multimodal vision pipeline. The React interface accepts an image and a text prompt. FastAPI exposes the /ai/vision endpoint, which sends both the image and prompt to the qwen/qwen3.8-27b vision-language model and returns an image analysis.
+
+Retrieval-Augmented Generation (RAG) uses ChromaDB as a vector database. Knowledge documents are converted into embeddings, stored in ChromaDB, retrieved using vector similarity, and supplied as context to the language model before it generates an answer.
