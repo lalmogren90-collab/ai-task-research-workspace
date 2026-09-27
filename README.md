@@ -1,150 +1,555 @@
 # AI Task & Research Workspace
 
-AI Task & Research Workspace is a local task manager and research assistant. The React interface shows tasks and sends chat requests to a FastAPI backend. A main orchestrator delegates task requests to a Task Agent and research questions to a Research Agent. The project demonstrates agent delegation, tool use, task-specific instructions, and scheduled agent work.
+AI Task & Research Workspace is a full-stack agentic AI application that combines task management, AI assistance, live research, multimodal image analysis, knowledge retrieval, analytics, and automation in one workspace.
+
+The project was developed as a practical environment for applying software engineering and agentic AI concepts, including React, FastAPI, PostgreSQL, Docker, LLM/VLM integration, multi-agent orchestration, RAG, vector databases, Tools, Skills, MCP, memory, agent harnesses, automation, coding agents, and Hermes Agent.
+
+## Key Features
+
+* Full-stack React + FastAPI application
+* PostgreSQL task storage running with Docker
+* Task CRUD operations
+* Main Agent with dynamic subagent routing
+* Specialized Task Agent and Research Agent
+* Groq-powered LLM integration
+* Tavily live web research
+* Multimodal VLM image analysis
+* RAG with ChromaDB
+* Deterministic local vector embeddings
+* Dynamic Skills for task planning and cleanup
+* MCP-based task operations
+* Conversation memory
+* Agent execution harness and tool loop
+* Agent-triggered Python analytics
+* Matplotlib chart generation
+* APScheduler automation
+* Hermes Agent integration
+* Repository-local Hermes Skill
+* Hermes MCP integration
+* Hermes Cron scheduled task
+* Automated unit and integration testing
+* AI-assisted development with Codex
 
 ## Architecture
 
 ```text
 React UI
-  → FastAPI API
-    → Main Orchestrator
-      ├─ Task Agent → dynamic Skill Selector → optional task skill → MCP → PostgreSQL
-      └─ Research Agent → Tavily web search → response grounded in search results
+   |
+   v
+FastAPI Backend
+   |
+   v
+Main Agent / Orchestrator
+   |
+   +--> Task Agent
+   |      |
+   |      +--> Dynamic Skill Selector
+   |      +--> Tools
+   |      +--> MCP
+   |      +--> PostgreSQL
+   |      +--> Task Analytics
+   |
+   +--> Research Agent
+          |
+          +--> Tavily Live Web Search
+
+Additional AI Services
+   |
+   +--> Multimodal VLM
+   +--> RAG Pipeline
+          |
+          +--> ChromaDB Vector Store
+
+Automation
+   |
+   +--> APScheduler
+   +--> Hermes Cron
+
+External Agent
+   |
+   +--> Hermes Agent
+          |
+          +--> task-project Skill
+          +--> Project MCP Server
 ```
 
-The orchestrator uses a Groq-hosted model to choose a subagent. The Task Agent selects a skill for each user turn, then uses MCP tools to read or change tasks in PostgreSQL. The Research Agent requests web searches through Tavily and uses the returned results to write its answer. Groq powers the model calls in both paths.
+The Main Agent acts as the orchestrator. Task-related requests are delegated to the Task Agent, while requests requiring external information are delegated to the Research Agent.
 
-The Task Agent keeps conversation history by `conversation_id` in process memory so it can interpret references to earlier turns. Its agent harness records steps, tool calls, tool results, and errors in the run result; this is not persistent storage. APScheduler runs a separate local process for the daily summary and unfinished-task monitor.
+The Task Agent dynamically selects specialized Skills when required and accesses task data through MCP rather than directly querying PostgreSQL.
 
-## Technology stack
+The Research Agent uses Tavily to retrieve live web information before generating its response.
 
-Python, FastAPI, PostgreSQL, SQLAlchemy, MCP (Model Context Protocol), Groq, Tavily, APScheduler, React, Vite, and Docker Compose.
+## Technology Stack
 
-## Repository structure
+### Frontend
 
-| Path | Purpose |
-| --- | --- |
-| `backend/app/main.py` | FastAPI app and API router registration |
-| `backend/app/routers/` | Task CRUD and agent chat endpoints |
-| `backend/app/agents/` | Orchestrator, subagents, Task Agent, and execution harness |
-| `backend/app/skills/` | Dynamic selector and `task_planning` / `task_cleanup` skill instructions |
-| `backend/app/mcp/` | Local MCP server and client helpers for task operations |
-| `backend/app/db/`, `backend/app/models/`, `backend/app/schemas/` | Database connection, task model, and API schemas |
-| `backend/app/memory/` | In-memory conversation history and agent state |
-| `backend/app/tools/` | Tool registry and Tavily web search implementation |
-| `backend/app/automation/` | Scheduler, daily summary, and unfinished-task monitor |
-| `frontend/` | React and Vite interface |
-| `tests/` | Isolated unit tests and live integration smoke test |
+* React
+* Vite
+* JavaScript
+* React Markdown
 
-## Prerequisites
+### Backend
 
-- Python with `venv` and `pip`
-- Node.js and npm
-- Docker with Docker Compose
-- Groq and Tavily API credentials for model and research requests
+* Python
+* FastAPI
+* SQLAlchemy
+* Pydantic
 
-No separate PostgreSQL installation is needed when using the supplied Compose service. Run the commands below from the repository root unless a step says otherwise.
+### Database
 
-## Environment configuration
+* PostgreSQL
+* Docker Compose
 
-Copy the example file, then replace its API key placeholders with your own credentials:
+### AI & Agentic Components
 
-```sh
+* Groq LLM/VLM API
+* Multi-agent orchestration
+* Tavily live web search
+* Model Context Protocol (MCP)
+* Dynamic Skills
+* Conversation memory
+* Agent execution harness
+* Tool-calling loop
+
+### RAG & Vector Retrieval
+
+* ChromaDB
+* Deterministic local vector embeddings
+* Retrieval-Augmented Generation
+
+### Analytics
+
+* Python
+* Matplotlib
+
+### Automation
+
+* APScheduler
+* Hermes Cron
+
+### Agent Frameworks & Development
+
+* Hermes Agent
+* Codex
+
+## Repository Structure
+
+```text
+.
+├── .hermes/
+│   └── skills/
+│       └── task-project/
+│           └── SKILL.md
+│
+├── backend/
+│   └── app/
+│       ├── agents/
+│       ├── automation/
+│       ├── db/
+│       ├── mcp/
+│       ├── memory/
+│       ├── models/
+│       ├── rag/
+│       ├── routers/
+│       ├── schemas/
+│       ├── skills/
+│       ├── tools/
+│       └── main.py
+│
+├── frontend/
+├── tests/
+├── .env.example
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+```
+
+## Task Management & CRUD
+
+The application supports standard task operations:
+
+* Create tasks
+* Read tasks
+* Update tasks
+* Delete tasks
+
+FastAPI exposes task CRUD endpoints and PostgreSQL provides persistent storage.
+
+The React interface displays the current task list and communicates with the FastAPI backend.
+
+## Multi-Agent System
+
+The application uses specialized agents instead of sending every request through a single workflow.
+
+### Main Agent
+
+The Main Agent analyzes the user's request and delegates it to the appropriate specialized agent.
+
+### Task Agent
+
+The Task Agent handles requests involving the user's task data, including:
+
+* Viewing tasks
+* Creating tasks
+* Updating tasks
+* Deleting tasks
+* Task planning
+* Task cleanup
+* Task analytics
+
+Task operations are performed through MCP tools.
+
+### Research Agent
+
+The Research Agent handles questions requiring external or current information.
+
+It uses Tavily live web search and generates responses based on retrieved search results.
+
+## Dynamic Skills
+
+The Task Agent can dynamically select reusable Skills according to the user's request.
+
+### `task_planning`
+
+Used for:
+
+* Prioritization
+* Planning
+* Recommended next actions
+
+### `task_cleanup`
+
+Used for:
+
+* Duplicate detection
+* Unclear task titles
+* Task-list quality review
+* Cleanup recommendations
+
+Ordinary CRUD requests can execute without selecting either Skill.
+
+## Model Context Protocol (MCP)
+
+The project includes a local MCP server that exposes structured task tools:
+
+```text
+get_tasks
+create_task
+update_task
+delete_task
+```
+
+The Task Agent uses these MCP tools instead of directly accessing PostgreSQL.
+
+This separates agent reasoning from database implementation and provides a structured tool interface.
+
+## LLM Integration
+
+Groq-hosted models are used for agent reasoning and response generation.
+
+LLM calls support:
+
+* Agent routing
+* Task reasoning
+* Research synthesis
+* Tool selection
+* Skill-guided responses
+* RAG response generation
+
+## VLM & Multimodal Analysis
+
+The application includes a multimodal pipeline that accepts both an image and a text prompt.
+
+The React interface allows users to select an image and request visual analysis. The FastAPI backend sends the image and prompt to a vision-language model and returns the resulting analysis.
+
+This demonstrates a combined language-and-vision workflow within the same application.
+
+## RAG & ChromaDB
+
+A Retrieval-Augmented Generation pipeline provides grounded answers from local project knowledge.
+
+The pipeline:
+
+1. Loads project knowledge.
+2. Splits the knowledge into retrievable chunks.
+3. Generates deterministic local vector embeddings.
+4. Stores the vectors in ChromaDB.
+5. Retrieves the most relevant chunks for a question.
+6. Supplies the retrieved context to the LLM.
+7. Generates an answer grounded in the retrieved information.
+
+This provides a practical implementation of RAG and vector similarity retrieval.
+
+## Agent Tools & Analytics
+
+The Task Agent includes a controlled Python analytics tool.
+
+When requested, the agent can:
+
+1. Retrieve live task data through MCP.
+2. Calculate task statistics.
+3. Compute completion progress.
+4. Generate a task-status chart using Matplotlib.
+5. Return the analytical result to the user.
+
+This demonstrates agent-triggered Python execution and analytical output generation.
+
+## Conversation Memory
+
+Task Agent conversations maintain history using a `conversation_id`.
+
+The memory implementation allows the agent to interpret references to earlier messages within the same running process.
+
+Memory is currently process-local and is not persistent across application restarts.
+
+## Agent Harness & Execution Loop
+
+The project includes an execution harness that records:
+
+* Agent steps
+* Tool calls
+* Tool results
+* Errors
+
+The execution loop coordinates model reasoning, tool selection, tool execution, observations, and final response generation.
+
+This makes agent behavior more observable and easier to test and debug.
+
+## Automation
+
+### APScheduler
+
+Application-level automation is implemented with APScheduler.
+
+Scheduled workflows include:
+
+* Daily task summaries
+* Monitoring unfinished tasks
+* Generating prioritized task guidance
+
+Run the scheduler with:
+
+```bash
+python -m backend.app.automation.scheduler
+```
+
+Scheduler behavior can be configured using environment variables such as:
+
+```text
+AUTOMATION_TIMEZONE
+DAILY_SUMMARY_HOUR
+TASK_MONITOR_MINUTES
+```
+
+## Hermes Agent Integration
+
+Hermes Agent was configured as an external agent framework for the project.
+
+A repository-local Skill is stored at:
+
+```text
+.hermes/skills/task-project/SKILL.md
+```
+
+The Skill provides Hermes with project-specific information about:
+
+* Application architecture
+* Task operations
+* MCP usage
+* RAG
+* VLM
+* Analytics
+* Safety rules
+
+### Hermes + MCP
+
+Hermes was connected to the project's MCP server.
+
+The connection exposes the project's four task tools:
+
+```text
+get_tasks
+create_task
+update_task
+delete_task
+```
+
+Hermes successfully discovered and invoked the MCP task tools to retrieve live project task data.
+
+### Hermes Cron
+
+A recurring Hermes Cron job named:
+
+```text
+Daily Task Summary
+```
+
+was configured with the local `task-project` Skill.
+
+The scheduled job demonstrates agent-level automation and was manually triggered successfully during validation.
+
+## AI-Assisted Development
+
+Codex was used as an AI coding agent during development to support:
+
+* Project inspection
+* Code modification
+* Debugging
+* Implementation assistance
+* Validation workflows
+
+## Environment Configuration
+
+Copy the example environment file:
+
+```bash
 cp .env.example .env
 ```
 
-| Variable | Use |
-| --- | --- |
-| `GROQ_API_KEY` | Required for Groq model calls; loaded from `.env` by the agent client |
-| `TAVILY_API_KEY` | Required for live web research; loaded from `.env` by the search tool |
-| `DATABASE_URL` | Optional database connection override; without it, the backend uses the local PostgreSQL configuration from Compose |
-| `AUTOMATION_TIMEZONE` | Optional scheduler timezone |
-| `DAILY_SUMMARY_HOUR` | Optional hour for the daily summary |
-| `TASK_MONITOR_MINUTES` | Optional unfinished-task check interval |
+Configure the required API credentials locally.
 
-`DATABASE_URL` and the scheduler settings are read from the process environment. For consistent overrides across FastAPI, the scheduler, and MCP subprocesses, export them before launch. In particular, the FastAPI entry point imports database configuration before the agent client loads `.env`. The supplied local database setup works without an override.
+Important environment variables include:
 
-## Local setup
+```text
+GROQ_API_KEY
+TAVILY_API_KEY
+DATABASE_URL
+AUTOMATION_TIMEZONE
+DAILY_SUMMARY_HOUR
+TASK_MONITOR_MINUTES
+```
 
-Create and activate a Python virtual environment from the repository root:
+Never commit real API credentials to Git.
 
-```sh
+## Local Setup
+
+Create and activate a virtual environment:
+
+```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
-On Windows, activate it with `.venv\Scripts\activate` instead. Install backend dependencies and start PostgreSQL:
+Install backend dependencies:
 
-```sh
+```bash
 python -m pip install -r requirements.txt
+```
+
+Start PostgreSQL:
+
+```bash
 docker compose up -d postgres
 ```
 
-After configuring `.env`, start the FastAPI server from the repository root:
+Start FastAPI:
 
-```sh
+```bash
 python -m uvicorn backend.app.main:app --reload
 ```
 
-In another terminal, install frontend dependencies and start Vite:
+In another terminal, start the React frontend:
 
-```sh
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## Running the application
-
-Keep PostgreSQL and FastAPI running, then open the local URL printed by Vite (normally `http://localhost:5173`). The frontend calls the backend at `http://127.0.0.1:8000`; the API also exposes interactive documentation at `http://127.0.0.1:8000/docs`. The interface displays the task list and offers agent chat for task requests and research questions. The scheduler is a separate optional process and does not start with FastAPI.
-
-## MCP and task operations
-
-The Task Agent invokes `get_tasks`, `create_task`, `update_task`, and `delete_task` through the local MCP client. The client starts `backend/app/mcp/server.py` with the `mcp run` command. The server uses SQLAlchemy to access the PostgreSQL task table. FastAPI also exposes direct task CRUD endpoints; the current UI uses the task-list endpoint to display tasks.
-
-## Dynamic task skills
-
-`task_planning` guides prioritization and action plans based on the retrieved task data. `task_cleanup` guides reviews for duplicates, unclear titles, and other task-list quality issues; it suggests changes rather than applying them automatically. The selector runs independently on every Task Agent user turn. Ordinary task CRUD requests can proceed without either skill, and conversation history does not lock a skill to later turns.
-
-## Automation
-
-`backend/app/automation/daily_tasks.py` asks the orchestrator for a daily summary focused on unfinished tasks. `backend/app/automation/task_monitor.py` retrieves tasks through MCP; when unfinished tasks exist, it asks for a short prioritized plan without changing tasks. A retrieval failure is reported as an error, not as an empty task list. Results are printed locally.
-
-Start the APScheduler process separately from the repository root, with the Python environment active:
-
-```sh
-python -m backend.app.automation.scheduler
-```
-
-The scheduler runs the summary daily and checks unfinished tasks on an interval. Configure its timezone, summary hour, and monitor interval with `AUTOMATION_TIMEZONE`, `DAILY_SUMMARY_HOUR`, and `TASK_MONITOR_MINUTES` in the process environment.
+Open the local URL displayed by Vite.
 
 ## Testing
 
-Run the isolated unit tests from the repository root. They mock external dependencies and do not require live APIs or PostgreSQL:
+### Unit Tests
 
-```sh
-python -m unittest discover -s tests -p 'test_*.py' -v
+Run:
+
+```bash
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
-The live integration smoke test exercises skill selection, MCP task retrieval, task delegation, and research delegation:
+Final validation:
 
-```sh
+```text
+Ran 9 tests
+OK
+```
+
+### Integration Smoke Test
+
+Run:
+
+```bash
 python -m tests.final_smoke_test
 ```
 
-Run that smoke test only with working Groq and Tavily API configuration, network access, and the PostgreSQL/MCP environment available. It calls live services and is separate from the isolated unit tests.
+The smoke test validates:
 
-## Current limitations
+* Skill discovery
+* Dynamic Skill selection
+* MCP task retrieval
+* Task Agent delegation
+* Research Agent delegation
+* Agent responses
 
-- Conversation memory is process-local and in-memory; it is lost on restart and is not shared across processes.
-- The application is intended primarily for local development and training.
-- Automation writes its output to local stdout; it does not send notifications.
-- Research and LLM functionality require configured external APIs and network access.
+Final validation completed successfully.
 
-## Security notes
+### Frontend Production Build
 
-Keep `.env` out of Git. Store actual secrets in environment variables or the local `.env`, never in source or documentation. The API key entries in `.env.example` are placeholders; replace them locally and do not commit real credentials.
+The React frontend was also validated with:
 
-## Agent engineering concepts demonstrated
+```bash
+cd frontend
+npm run build
+```
 
-The project brings together orchestration and delegation to subagents, model tool calling, dynamic task skills, MCP access to task data, conversation memory, an agent execution harness, Tavily-grounded research, scheduled automation, isolated and live testing, and coding-agent-assisted development.
+The production build completed successfully.
+
+## Security Notes
+
+* Do not commit `.env`.
+* Do not store real API keys in source code.
+* `.env.example` contains configuration placeholders only.
+* Agent task modifications should only occur when explicitly requested.
+* Task data is accessed through structured MCP tools.
+
+## Current Limitations
+
+* Conversation memory is process-local and is lost when the application restarts.
+* The project is designed primarily as a local development and training environment.
+* APScheduler output is local and does not send external notifications.
+* LLM, VLM, and live research functionality require configured external APIs.
+* Hermes Cron was configured and manually validated; continuous background gateway execution was not part of the final validation.
+
+## Agentic AI Concepts Demonstrated
+
+This project practically demonstrates:
+
+* LLM integration
+* VLM integration
+* Multimodal AI
+* RAG
+* Vector databases
+* Multi-agent orchestration
+* Subagent delegation
+* Prompt engineering
+* Context engineering
+* Harness engineering
+* Loop engineering
+* Tool calling
+* Dynamic Skills
+* MCP
+* Conversation memory
+* Live web research
+* Controlled Python analytics
+* Automation
+* Agent scheduling
+* Coding agents
+* Hermes Agent integration
+* Full-stack AI application development
+
+## Project Purpose
+
+The project was created as a practical implementation of software engineering and agentic AI concepts within one integrated application.
+
+Rather than demonstrating each concept in isolation, the workspace connects frontend development, backend APIs, databases, AI models, agents, retrieval, tools, protocols, analytics, and automation into a single working system.
